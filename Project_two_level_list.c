@@ -132,6 +132,25 @@ void freeList(OuterNode *head)
     }
 }
 
+char* findLongestString(OuterNode *head) {
+    char *longest = NULL;
+    size_t maxLen = 0;
+
+    while (head) {
+        InnerNode *inner = head->childHead;
+        while (inner) {
+            size_t currentLen = strlen(inner->data);
+            if (currentLen > maxLen) {
+                maxLen = currentLen;
+                longest = inner->data;
+            }
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+    return longest;
+}
+
 int main()
 {
     int N = 3;
@@ -139,11 +158,16 @@ int main()
 
     if (myList)
     {
-        printf("Current List: ")
+        printf("Current List: ");
         printList(myList);
 
         int total = countTotalElements(myList);
         printf("Total elements in list: %d\n", total);
+
+        char *longest = findLongestString(myList);
+        if (longest) {
+            printf("The longest word is: %s (length: %zu)\n", longest, strlen(longest));
+        }
     }
     printf("\nCleaning up memory...\n");
     freeList(myList);
