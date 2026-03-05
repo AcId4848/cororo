@@ -35,7 +35,7 @@ OuterNode *buildTwoLevelList(const char *filename, int N)
     FILE *file = fopen(filename, "r");
     if (!file)
     {
-        printf("Ошибка: файл не найден!\n");
+        printf("Error: File not found!\n");
         return NULL;
     }
 
@@ -101,6 +101,19 @@ void printList(OuterNode *head)
     }
 }
 
+int countTotalElements(OuterNode *head) {
+    int total = 0;
+    while (head) {
+        InnerNode *inner = head->childHead;
+        while (inner) {
+            total++;
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+    return total;
+}
+
 void freeList(OuterNode *head)
 {
     while (head)
@@ -119,31 +132,42 @@ void freeList(OuterNode *head)
     }
 }
 
-int countTotalElements(OuterNode *head) {
-    int total = 0;
+char* findLongestString(OuterNode *head) {
+    char *longest = NULL;
+    size_t maxLen = 0;
+
     while (head) {
         InnerNode *inner = head->childHead;
         while (inner) {
-            total++;
+            size_t currentLen = strlen(inner->data);
+            if (currentLen > maxLen) {
+                maxLen = currentLen;
+                longest = inner->data;
+            }
             inner = inner->next;
         }
         head = head->next;
     }
-    return total;
+    return longest;
 }
 
 int main()
 {
     int N = 3;
-    OuterNode *myList = buildTwoLevelList("data.txt", N);
+    OuterNode *myList = buildTwoLevelList("data_for_two_level_list.txt", N);
 
     if (myList)
     {
-        printf("Current List: ")
+        printf("Current List: ");
         printList(myList);
 
         int total = countTotalElements(myList);
         printf("Total elements in list: %d\n", total);
+
+        char *longest = findLongestString(myList);
+        if (longest) {
+            printf("The longest word is: %s (length: %zu)\n", longest, strlen(longest));
+        }
     }
     printf("\nCleaning up memory...\n");
     freeList(myList);
