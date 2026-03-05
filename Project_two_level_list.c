@@ -119,6 +119,19 @@ void freeList(OuterNode *head)
     }
 }
 
+int countTotalElements(OuterNode *head) {
+    int total = 0;
+    while (head) {
+        InnerNode *inner = head->childHead;
+        while (inner) {
+            total++;
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+    return total;
+}
+
 int main()
 {
     int N = 3;
@@ -126,7 +139,11 @@ int main()
 
     if (myList)
     {
+        printf("Current List: ")
         printList(myList);
+
+        int total = countTotalElements(myList);
+        printf("Total elements in list: %d\n", total);
     }
     printf("\nCleaning up memory...\n");
     freeList(myList);
