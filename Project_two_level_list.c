@@ -2,33 +2,39 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct InnerNode {
+typedef struct InnerNode
+{
     char *data;
     struct InnerNode *next;
 } InnerNode;
 
-typedef struct OuterNode {
+typedef struct OuterNode
+{
     InnerNode *childHead;
     struct OuterNode *next;
 } OuterNode;
 
-InnerNode* createInnerNode(char *text) {
-    InnerNode *newNode = (InnerNode*)malloc(sizeof(InnerNode));
+InnerNode *createInnerNode(char *text)
+{
+    InnerNode *newNode = (InnerNode *)malloc(sizeof(InnerNode));
     newNode->data = strdup(text);
     newNode->next = NULL;
     return newNode;
 }
 
-OuterNode* createOuterNode() {
-    OuterNode *newNode = (OuterNode*)malloc(sizeof(OuterNode));
+OuterNode *createOuterNode()
+{
+    OuterNode *newNode = (OuterNode *)malloc(sizeof(OuterNode));
     newNode->childHead = NULL;
     newNode->next = NULL;
     return newNode;
 }
 
-OuterNode* buildTwoLevelList(const char *filename, int N) {
+OuterNode *buildTwoLevelList(const char *filename, int N)
+{
     FILE *file = fopen(filename, "r");
-    if (!file) {
+    if (!file)
+    {
         printf("Ошибка: файл не найден!\n");
         return NULL;
     }
@@ -38,14 +44,19 @@ OuterNode* buildTwoLevelList(const char *filename, int N) {
     char buffer[256];
     int count = 0;
 
-    while (fgets(buffer, sizeof(buffer), file)) {
+    while (fgets(buffer, sizeof(buffer), file))
+    {
         buffer[strcspn(buffer, "\n")] = 0;
 
-        if (head == NULL || count == N) {
+        if (head == NULL || count == N)
+        {
             OuterNode *newOuter = createOuterNode();
-            if (head == NULL) {
+            if (head == NULL)
+            {
                 head = newOuter;
-            } else {
+            }
+            else
+            {
                 currentOuter->next = newOuter;
             }
             currentOuter = newOuter;
@@ -54,11 +65,15 @@ OuterNode* buildTwoLevelList(const char *filename, int N) {
 
         InnerNode *newInner = createInnerNode(buffer);
 
-        if (currentOuter->childHead == NULL) {
+        if (currentOuter->childHead == NULL)
+        {
             currentOuter->childHead = newInner;
-        } else {
+        }
+        else
+        {
             InnerNode *temp = currentOuter->childHead;
-            while (temp->next != NULL) {
+            while (temp->next != NULL)
+            {
                 temp = temp->next;
             }
             temp->next = newInner;
@@ -70,12 +85,15 @@ OuterNode* buildTwoLevelList(const char *filename, int N) {
     return head;
 }
 
-void printList(OuterNode *head) {
+void printList(OuterNode *head)
+{
     int i = 1;
-    while (head) {
+    while (head)
+    {
         printf("Group %d:\n", i++);
         InnerNode *inner = head->childHead;
-        while (inner) {
+        while (inner)
+        {
             printf("  - %s\n", inner->data);
             inner = inner->next;
         }
@@ -83,12 +101,36 @@ void printList(OuterNode *head) {
     }
 }
 
-int main() {
+void freeList(OuterNode *head)
+{
+    while (head)
+    {
+        OuterNode *nextOuter = head->next;
+        InnerNode *inner = head->childHead;
+        while (inner)
+        {
+            InnerNode *nextInner = inner->next;
+            free(inner->data);
+            free(inner);
+            inner = nextInner;
+        }
+        free(head);
+        head = nextOuter;
+    }
+}
+
+int main()
+{
     int N = 3;
     OuterNode *myList = buildTwoLevelList("data.txt", N);
-    
-    if (myList) {
+
+    if (myList)
+    {
         printList(myList);
     }
+    printf("\nCleaning up memory...\n");
+    freeList(myList);
+    printf("Memory freed successfully.\n");
+    myList = NULL;
     return 0;
 }
