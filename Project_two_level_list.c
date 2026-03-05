@@ -2,16 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-// узел нижнего уровня
 typedef struct InnerNode {
     char *data;
     struct InnerNode *next;
 } InnerNode;
 
-// цзел верхнего уровня
 typedef struct OuterNode {
-    InnerNode *childHead;     // "Заголовок" внутреннего списка
-    struct OuterNode *next;   // Указатель на следующий "вагон" верхнего уровня
+    InnerNode *childHead;
+    struct OuterNode *next;
 } OuterNode;
 
 InnerNode* createInnerNode(char *text) {
@@ -54,7 +52,6 @@ OuterNode* buildTwoLevelList(const char *filename, int N) {
             count = 0;
         }
 
-        // Создаем узел для строки
         InnerNode *newInner = createInnerNode(buffer);
 
         if (currentOuter->childHead == NULL) {
@@ -93,8 +90,5 @@ int main() {
     if (myList) {
         printList(myList);
     }
-
-    // Тут по-хорошему надо еще написать функцию очистки памяти (free), 
-    // но для начала лабы это база.
     return 0;
 }
