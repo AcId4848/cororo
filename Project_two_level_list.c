@@ -85,6 +85,64 @@ OuterNode* buildTwoLevelList(const char* filename, int N)
     fclose(file);
     return head;
 }
+uint32_t hash_jerkins(const char* str)
+{
+    uint32_t hash = 0;
+
+    while (*str)
+    {
+        hash += (unsigned char)(*str);
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+        str++;
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    return hash;
+}
+
+void printListWithHashes(OuterNode* head) {
+    int i = 1;
+    while (head) {
+        printf("Group %d:\n", i++);
+        InnerNode* inner = head->childHead;
+        while (inner) {
+            uint32_t h = hash_jerkins(inner->data);
+            printf("  - Data: [%s] | Hash (Jenkins): %u\n", inner->data, h);
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+}
+
+uint32_t hash_fnv1a(const char *str) {
+    uint32_t hash = 2166136261U;
+    
+    while (*str) {
+        hash ^= (unsigned char)(*str); 
+        hash *= 16777619U;           
+        str++;                       
+    }
+    return hash;
+}
+
+
+void printListWithHashesFNV(OuterNode* head) {
+    int i = 1;
+    while (head) {
+        printf("Group %d:\n", i++);
+        InnerNode* inner = head->childHead;
+        while (inner) {
+            uint32_t h = hash_fnv1a(inner->data);
+            printf("  - Data: [%s] | Hash (FNV-1a): %u\n", inner->data, h);
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+}
 
 void printListWithHashes(OuterNode* head) {
     int i = 1;
@@ -270,11 +328,18 @@ int main()
     {
         printf("Current List:\n");
         printList(myList);
+        
+        printf("\n=== Hash Outputs ===\n");
+        printf("Hash List (Jenkins):\n");
+        printListWithHashes(myList);
+        
+        printf("\nHash List (FNV-1a):\n");
+        printListWithHashesFNV(myList);
         printf("Hash List: ");
         printListWithHashes(myList);
 
         int total = countTotalElements(myList);
-        printf("Total elements: %d\n", total);
+        printf("\nTotal elements: %d\n", total);
 
         printf("Groups: %d\n", countGroups(myList));
 
@@ -290,10 +355,10 @@ int main()
         addToGroup(myList, 1, "InsertedWord");
         reverseInnerList(myList);
 
-        printf("After modifications:\n");
+        printf("\nAfter modifications:\n");
         printList(myList);
 
-        printf("Reverse print:\n");
+        printf("\nReverse print:\n");
         printReverse(myList);
     }
 
