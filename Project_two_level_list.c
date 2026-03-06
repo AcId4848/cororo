@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 typedef struct InnerNode
 {
@@ -85,6 +86,20 @@ OuterNode* buildTwoLevelList(const char* filename, int N)
     return head;
 }
 
+void printListWithHashes(OuterNode* head) {
+    int i = 1;
+    while (head) {
+        printf("Group %d:\n", i++);
+        InnerNode* inner = head->childHead;
+        while (inner) {
+            uint32_t h = hash_jenkins(inner->data);
+            printf("  - Data: [%s] | Hash (Jenkins): %u\n", inner->data, h);
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+}
+
 void printList(OuterNode* head)
 {
     int i = 1;
@@ -99,6 +114,25 @@ void printList(OuterNode* head)
         }
         head = head->next;
     }
+}
+// Алгоритм хеширования Jerkins
+uint32_t hash_jerkins(const char* str)
+{
+    uint32_t hash = 0;
+
+    while (*str)
+    {
+        hash += (unsigned char)(*str);
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+        str++;
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    return hash;
 }
 
 int countTotalElements(OuterNode* head) {
@@ -236,6 +270,8 @@ int main()
     {
         printf("Current List:\n");
         printList(myList);
+        printf("Hash List: ");
+        printListWithHashes(myList);
 
         int total = countTotalElements(myList);
         printf("Total elements: %d\n", total);
