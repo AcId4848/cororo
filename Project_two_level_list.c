@@ -1,46 +1,47 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 typedef struct InnerNode
 {
-    char *data;
-    struct InnerNode *next;
+    char* data;
+    struct InnerNode* next;
 } InnerNode;
 
 typedef struct OuterNode
 {
-    InnerNode *childHead;
-    struct OuterNode *next;
+    InnerNode* childHead;
+    struct OuterNode* next;
 } OuterNode;
 
-InnerNode *createInnerNode(char *text)
+InnerNode* createInnerNode(char* text)
 {
-    InnerNode *newNode = (InnerNode *)malloc(sizeof(InnerNode));
+    InnerNode* newNode = (InnerNode*)malloc(sizeof(InnerNode));
     newNode->data = strdup(text);
     newNode->next = NULL;
     return newNode;
 }
 
-OuterNode *createOuterNode()
+OuterNode* createOuterNode()
 {
-    OuterNode *newNode = (OuterNode *)malloc(sizeof(OuterNode));
+    OuterNode* newNode = (OuterNode*)malloc(sizeof(OuterNode));
     newNode->childHead = NULL;
     newNode->next = NULL;
     return newNode;
 }
 
-OuterNode *buildTwoLevelList(const char *filename, int N)
+OuterNode* buildTwoLevelList(const char* filename, int N)
 {
-    FILE *file = fopen(filename, "r");
+    FILE* file = fopen(filename, "r");
     if (!file)
     {
-        printf("Ошибка: файл не найден!\n");
+        printf("Error: File not found!\n");
         return NULL;
     }
 
-    OuterNode *head = NULL;
-    OuterNode *currentOuter = NULL;
+    OuterNode* head = NULL;
+    OuterNode* currentOuter = NULL;
     char buffer[256];
     int count = 0;
 
@@ -50,7 +51,7 @@ OuterNode *buildTwoLevelList(const char *filename, int N)
 
         if (head == NULL || count == N)
         {
-            OuterNode *newOuter = createOuterNode();
+            OuterNode* newOuter = createOuterNode();
             if (head == NULL)
             {
                 head = newOuter;
@@ -63,7 +64,7 @@ OuterNode *buildTwoLevelList(const char *filename, int N)
             count = 0;
         }
 
-        InnerNode *newInner = createInnerNode(buffer);
+        InnerNode* newInner = createInnerNode(buffer);
 
         if (currentOuter->childHead == NULL)
         {
@@ -71,7 +72,7 @@ OuterNode *buildTwoLevelList(const char *filename, int N)
         }
         else
         {
-            InnerNode *temp = currentOuter->childHead;
+            InnerNode* temp = currentOuter->childHead;
             while (temp->next != NULL)
             {
                 temp = temp->next;
@@ -85,13 +86,27 @@ OuterNode *buildTwoLevelList(const char *filename, int N)
     return head;
 }
 
-void printList(OuterNode *head)
+void printListWithHashes(OuterNode* head) {
+    int i = 1;
+    while (head) {
+        printf("Group %d:\n", i++);
+        InnerNode* inner = head->childHead;
+        while (inner) {
+            uint32_t h = hash_jenkins(inner->data);
+            printf("  - Data: [%s] | Hash (Jenkins): %u\n", inner->data, h);
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+}
+
+void printList(OuterNode* head)
 {
     int i = 1;
     while (head)
     {
         printf("Group %d:\n", i++);
-        InnerNode *inner = head->childHead;
+        InnerNode* inner = head->childHead;
         while (inner)
         {
             printf("  - %s\n", inner->data);
@@ -100,11 +115,30 @@ void printList(OuterNode *head)
         head = head->next;
     }
 }
+// Алгоритм хеширования Jerkins
+uint32_t hash_jerkins(const char* str)
+{
+    uint32_t hash = 0;
 
-int countTotalElements(OuterNode *head) {
+    while (*str)
+    {
+        hash += (unsigned char)(*str);
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+        str++;
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    return hash;
+}
+
+int countTotalElements(OuterNode* head) {
     int total = 0;
     while (head) {
-        InnerNode *inner = head->childHead;
+        InnerNode* inner = head->childHead;
         while (inner) {
             total++;
             inner = inner->next;
@@ -114,15 +148,110 @@ int countTotalElements(OuterNode *head) {
     return total;
 }
 
-void freeList(OuterNode *head)
+int countGroups(OuterNode* head) {
+    int groups = 0;
+    while (head) {
+        groups++;
+        head = head->next;
+    }
+    return groups;
+}
+
+char* findLongestString(OuterNode* head) {
+    char* longest = NULL;
+    size_t maxLen = 0;
+
+    while (head) {
+        InnerNode* inner = head->childHead;
+        while (inner) {
+            size_t currentLen = strlen(inner->data);
+            if (currentLen > maxLen) {
+                maxLen = currentLen;
+                longest = inner->data;
+            }
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+    return longest;
+}
+
+char* findShortestString(OuterNode* head) {
+    char* shortest = NULL;
+    size_t minLen = (size_t)-1;
+
+    while (head) {
+        InnerNode* inner = head->childHead;
+        while (inner) {
+            size_t currentLen = strlen(inner->data);
+            if (currentLen < minLen) {
+                minLen = currentLen;
+                shortest = inner->data;
+            }
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+    return shortest;
+}
+
+char* findBySubstring(OuterNode* head, const char* sub) {
+    while (head) {
+        InnerNode* inner = head->childHead;
+        while (inner) {
+            if (strstr(inner->data, sub))
+                return inner->data;
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+    return NULL;
+}
+
+void reverseInnerList(OuterNode* node) {
+    InnerNode* prev = NULL;
+    InnerNode* curr = node->childHead;
+    while (curr) {
+        InnerNode* next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
+    }
+    node->childHead = prev;
+}
+
+void addToGroup(OuterNode* head, int group, const char* text) {
+    int i = 1;
+    while (head && i < group) {
+        head = head->next;
+        i++;
+    }
+    if (!head) return;
+    InnerNode* newNode = createInnerNode((char*)text);
+    newNode->next = head->childHead;
+    head->childHead = newNode;
+}
+
+void printReverse(OuterNode* head) {
+    if (!head) return;
+    printReverse(head->next);
+    InnerNode* inner = head->childHead;
+    while (inner) {
+        printf("%s ", inner->data);
+        inner = inner->next;
+    }
+    printf("\n");
+}
+
+void freeList(OuterNode* head)
 {
     while (head)
     {
-        OuterNode *nextOuter = head->next;
-        InnerNode *inner = head->childHead;
+        OuterNode* nextOuter = head->next;
+        InnerNode* inner = head->childHead;
         while (inner)
         {
-            InnerNode *nextInner = inner->next;
+            InnerNode* nextInner = inner->next;
             free(inner->data);
             free(inner);
             inner = nextInner;
@@ -135,19 +264,39 @@ void freeList(OuterNode *head)
 int main()
 {
     int N = 3;
-    OuterNode *myList = buildTwoLevelList("data.txt", N);
+    OuterNode* myList = buildTwoLevelList("data_for_two_level_list.txt", N);
 
     if (myList)
     {
-        printf("Current List: ")
+        printf("Current List:\n");
         printList(myList);
+        printf("Hash List: ");
+        printListWithHashes(myList);
 
         int total = countTotalElements(myList);
-        printf("Total elements in list: %d\n", total);
+        printf("Total elements: %d\n", total);
+
+        printf("Groups: %d\n", countGroups(myList));
+
+        char* longest = findLongestString(myList);
+        if (longest) printf("Longest: %s\n", longest);
+
+        char* shortest = findShortestString(myList);
+        if (shortest) printf("Shortest: %s\n", shortest);
+
+        char* found = findBySubstring(myList, "ab");
+        if (found) printf("Found substring: %s\n", found);
+
+        addToGroup(myList, 1, "InsertedWord");
+        reverseInnerList(myList);
+
+        printf("After modifications:\n");
+        printList(myList);
+
+        printf("Reverse print:\n");
+        printReverse(myList);
     }
-    printf("\nCleaning up memory...\n");
+
     freeList(myList);
-    printf("Memory freed successfully.\n");
-    myList = NULL;
     return 0;
 }
