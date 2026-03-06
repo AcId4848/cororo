@@ -151,6 +151,25 @@ char* findLongestString(OuterNode *head) {
     return longest;
 }
 
+char* findShortestString(OuterNode *head) {
+    char *shortest = NULL;
+    size_t minLen = (size_t)-1;
+
+    while (head) {
+        InnerNode *inner = head->childHead;
+        while (inner) {
+            size_t currentLen = strlen(inner->data);
+            if (currentLen < minLen) {
+                minLen = currentLen;
+                shortest = inner->data;
+            }
+            inner = inner->next;
+        }
+        head = head->next;
+    }
+    return shortest;
+}
+
 int main()
 {
     int N = 3;
@@ -167,6 +186,11 @@ int main()
         char *longest = findLongestString(myList);
         if (longest) {
             printf("The longest word is: %s (length: %zu)\n", longest, strlen(longest));
+        }
+
+        char *shortest = findShortestString(myList);
+        if (shortest) {
+            printf("The shortest word is: %s (length: %zu)\n", shortest, strlen(shortest));
         }
     }
     printf("\nCleaning up memory...\n");
