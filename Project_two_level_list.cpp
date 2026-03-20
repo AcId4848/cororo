@@ -45,26 +45,6 @@ vector<unsigned char> readBinaryFile(const string& filename) {
 
     return buffer;
 }
-
-uint32_t hash_jerkins(const char* str)
-{
-    uint32_t hash = 0;
-
-    while (*str)
-    {
-        hash += (unsigned char)(*str);
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
-        str++;
-    }
-
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
-
-    return hash;
-}
-
 string hash_fnv1a(const vector<unsigned char>& data) {
     const uint64_t FNV_OFFSET_BASIS = 14695981039346656037ULL;
     const uint64_t FNV_PRIME = 1099511628211ULL;
@@ -78,6 +58,23 @@ string hash_fnv1a(const vector<unsigned char>& data) {
 
     ostringstream oss;
     oss << hex << setw(16) << setfill('0') << hash;
+    return oss.str();
+}
+string hash_jenkins(const vector<unsigned char>& data) {
+    uint32_t hash = 0;
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        hash += data[i];
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    ostringstream oss;
+    oss << hex << setw(8) << setfill('0') << hash;
     return oss.str();
 }
 
