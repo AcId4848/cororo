@@ -9,7 +9,8 @@
 
 using namespace std;
 
-void setupLocalization() {
+void setupLocalization()
+{
     SetConsoleCP(65001);
     SetConsoleOutputCP(65001);
 
@@ -17,21 +18,29 @@ void setupLocalization() {
 
     setlocale(LC_ALL, "Russian_Russia.65001");
 
-    try {
+    try
+    {
         locale::global(locale("ru_RU.UTF-8"));
         cout.imbue(locale());
-    } catch (...) {
-        try {
+    }
+    catch (...)
+    {
+        try
+        {
             locale::global(locale("Russian_Russia.65001"));
             cout.imbue(locale());
-        } catch (...) {
+        }
+        catch (...)
+        {
             locale::global(locale(""));
         }
     }
 }
-vector<unsigned char> readBinaryFile(const string& filename) {
+vector<unsigned char> readBinaryFile(const string &filename)
+{
     ifstream file(filename, ios::binary | ios::ate);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         throw runtime_error("Не удалось открыть файл: " + filename);
     }
 
@@ -39,19 +48,38 @@ vector<unsigned char> readBinaryFile(const string& filename) {
     file.seekg(0, ios::beg);
 
     vector<unsigned char> buffer(size);
-    if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
+    if (!file.read(reinterpret_cast<char *>(buffer.data()), size))
+    {
         throw runtime_error("Ошибка чтения файла");
     }
 
     return buffer;
 }
-string hash_fnv1a(const vector<unsigned char>& data) {
+
+void printBinaryData(const vector<unsigned char> &data, size_t maxBytes = 256)
+{
+    cout << "\n========== БИНАРНЫЕ ДАННЫЕ (HEX) ==========\n";
+    cout << "Размер файла: " << data.size() << " байт\n";
+    cout << "Первые " << min(maxBytes, data.size()) << " байт:\n\n";
+
+    for (size_t i = 0; i < min(maxBytes, data.size()); ++i)
+    {
+        cout << hex << setw(2) << setfill('0') << (int)data[i] << " ";
+        if ((i + 1) % 16 == 0)
+            cout << "\n";
+    }
+    cout << dec << "\n";
+}
+
+string hash_fnv1a(const vector<unsigned char> &data)
+{
     const uint64_t FNV_OFFSET_BASIS = 14695981039346656037ULL;
     const uint64_t FNV_PRIME = 1099511628211ULL;
 
     uint64_t hash = FNV_OFFSET_BASIS;
 
-    for (size_t i = 0; i < data.size(); ++i) {
+    for (size_t i = 0; i < data.size(); ++i)
+    {
         hash ^= data[i];
         hash *= FNV_PRIME;
     }
@@ -60,10 +88,12 @@ string hash_fnv1a(const vector<unsigned char>& data) {
     oss << hex << setw(16) << setfill('0') << hash;
     return oss.str();
 }
-string hash_jenkins(const vector<unsigned char>& data) {
+string hash_jenkins(const vector<unsigned char> &data)
+{
     uint32_t hash = 0;
 
-    for (size_t i = 0; i < data.size(); ++i) {
+    for (size_t i = 0; i < data.size(); ++i)
+    {
         hash += data[i];
         hash += (hash << 10);
         hash ^= (hash >> 6);
@@ -78,224 +108,48 @@ string hash_jenkins(const vector<unsigned char>& data) {
     return oss.str();
 }
 
-void printListWithHashes(OuterNode* head) {
-    int i = 1;
-    while (head) {
-        printf("Group %d:\n", i++);
-        InnerNode* inner = head->childHead;
-        while (inner) {
-            uint32_t h = hash_jenkins(inner->data);
-            printf("  - Data: [%s] | Hash (Jenkins): %u\n", inner->data, h);
-            inner = inner->next;
-        }
-        head = head->next;
-    }
-}
-
-void printList(OuterNode* head)
-{
-    int i = 1;
-    while (head)
-    {
-        printf("Group %d:\n", i++);
-        InnerNode* inner = head->childHead;
-        while (inner)
-        {
-            printf("  - %s\n", inner->data);
-            inner = inner->next;
-        }
-        head = head->next;
-    }
-}
-// Алгоритм хеширования Jerkins
-uint32_t hash_jerkins(const char* str)
-{
-    uint32_t hash = 0;
-
-    while (*str)
-    {
-        hash += (unsigned char)(*str);
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
-        str++;
-    }
-
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
-
-    return hash;
-}
-
-int countTotalElements(OuterNode* head) {
-    int total = 0;
-    while (head) {
-        InnerNode* inner = head->childHead;
-        while (inner) {
-            total++;
-            inner = inner->next;
-        }
-        head = head->next;
-    }
-    return total;
-}
-
-int countGroups(OuterNode* head) {
-    int groups = 0;
-    while (head) {
-        groups++;
-        head = head->next;
-    }
-    return groups;
-}
-
-char* findLongestString(OuterNode* head) {
-    char* longest = NULL;
-    size_t maxLen = 0;
-
-    while (head) {
-        InnerNode* inner = head->childHead;
-        while (inner) {
-            size_t currentLen = strlen(inner->data);
-            if (currentLen > maxLen) {
-                maxLen = currentLen;
-                longest = inner->data;
-            }
-            inner = inner->next;
-        }
-        head = head->next;
-    }
-    return longest;
-}
-
-char* findShortestString(OuterNode* head) {
-    char* shortest = NULL;
-    size_t minLen = (size_t)-1;
-
-    while (head) {
-        InnerNode* inner = head->childHead;
-        while (inner) {
-            size_t currentLen = strlen(inner->data);
-            if (currentLen < minLen) {
-                minLen = currentLen;
-                shortest = inner->data;
-            }
-            inner = inner->next;
-        }
-        head = head->next;
-    }
-    return shortest;
-}
-
-char* findBySubstring(OuterNode* head, const char* sub) {
-    while (head) {
-        InnerNode* inner = head->childHead;
-        while (inner) {
-            if (strstr(inner->data, sub))
-                return inner->data;
-            inner = inner->next;
-        }
-        head = head->next;
-    }
-    return NULL;
-}
-
-void reverseInnerList(OuterNode* node) {
-    InnerNode* prev = NULL;
-    InnerNode* curr = node->childHead;
-    while (curr) {
-        InnerNode* next = curr->next;
-        curr->next = prev;
-        prev = curr;
-        curr = next;
-    }
-    node->childHead = prev;
-}
-
-void addToGroup(OuterNode* head, int group, const char* text) {
-    int i = 1;
-    while (head && i < group) {
-        head = head->next;
-        i++;
-    }
-    if (!head) return;
-    InnerNode* newNode = createInnerNode((char*)text);
-    newNode->next = head->childHead;
-    head->childHead = newNode;
-}
-
-void printReverse(OuterNode* head) {
-    if (!head) return;
-    printReverse(head->next);
-    InnerNode* inner = head->childHead;
-    while (inner) {
-        printf("%s ", inner->data);
-        inner = inner->next;
-    }
-    printf("\n");
-}
-
-void freeList(OuterNode* head)
-{
-    while (head)
-    {
-        OuterNode* nextOuter = head->next;
-        InnerNode* inner = head->childHead;
-        while (inner)
-        {
-            InnerNode* nextInner = inner->next;
-            free(inner->data);
-            free(inner);
-            inner = nextInner;
-        }
-        free(head);
-        head = nextOuter;
-    }
-}
-
 int main()
 {
-    int N = 3;
-    OuterNode* myList = buildTwoLevelList("data_for_two_level_list.txt", N);
+    setupLocalization();
 
-    if (myList)
+    string filename;
+    cout << "Введите путь к файлу (.mp4, .mp3, .exe, любой): ";
+    getline(cin, filename);
+
+    try
     {
-        printf("Current List:\n");
-        printList(myList);
-        
-        printf("\n=== Hash Outputs ===\n");
-        printf("Hash List (Jenkins):\n");
-        printListWithHashes(myList);
-        
-        printf("\nHash List (FNV-1a):\n");
-        printListWithHashesFNV(myList);
-        printf("Hash List: ");
-        printListWithHashes(myList);
+        cout << "\n[1] Чтение бинарного файла...\n";
+        vector<unsigned char> fileData = readBinaryFile(filename);
+        cout << "✓ Файл успешно загружен!\n";
 
-        int total = countTotalElements(myList);
-        printf("\nTotal elements: %d\n", total);
+        cout << "\n[2] Вывод бинарных данных в HEX формате:\n";
+        printBinaryData(fileData);
 
-        printf("Groups: %d\n", countGroups(myList));
+        cout << "\n[3] Хеширование данных:\n";
+        cout << "==========================================\n\n";
 
-        char* longest = findLongestString(myList);
-        if (longest) printf("Longest: %s\n", longest);
+        cout << "Алгоритм 1: FNV-1a (64-bit)\n";
+        cout << "----------------------------\n";
+        string fnvHash = hash_fnv1a(fileData);
+        cout << "FNV-1a Hash: " << fnvHash << "\n";
+        cout << "Длина хеша: " << fnvHash.length() / 2 << " байт (" << fnvHash.length() << " символов)\n\n";
 
-        char* shortest = findShortestString(myList);
-        if (shortest) printf("Shortest: %s\n", shortest);
+        cout << "Алгоритм 2: Jenkins One-at-a-Time (32-bit)\n";
+        cout << "-------------------------------------------\n";
+        string jenkinsHash = hash_jenkins(fileData);
+        cout << "Jenkins Hash: " << jenkinsHash << "\n";
+        cout << "Длина хеша: " << jenkinsHash.length() / 2 << " байт (" << jenkinsHash.length() << " символов)\n\n";
 
-        char* found = findBySubstring(myList, "ab");
-        if (found) printf("Found substring: %s\n", found);
-
-        addToGroup(myList, 1, "InsertedWord");
-        reverseInnerList(myList);
-
-        printf("\nAfter modifications:\n");
-        printList(myList);
-
-        printf("\nReverse print:\n");
-        printReverse(myList);
+        cout << "==========================================\n";
+        cout << "\n✓ Обработка завершена успешно!\n";
+    }
+    catch (const exception &e)
+    {
+        cerr << "\n✗ ОШИБКА: " << e.what() << "\n";
+        return 1;
     }
 
-    freeList(myList);
+    cout << "\nНажмите Enter для выхода...";
+    cin.get();
     return 0;
 }
