@@ -29,77 +29,23 @@ void setupLocalization() {
         }
     }
 }
-
-InnerNode* createInnerNode(char* text)
-{
-    InnerNode* newNode = (InnerNode*)malloc(sizeof(InnerNode));
-    newNode->data = strdup(text);
-    newNode->next = NULL;
-    return newNode;
-}
-
-OuterNode* createOuterNode()
-{
-    OuterNode* newNode = (OuterNode*)malloc(sizeof(OuterNode));
-    newNode->childHead = NULL;
-    newNode->next = NULL;
-    return newNode;
-}
-
-OuterNode* buildTwoLevelList(const char* filename, int N)
-{
-    FILE* file = fopen(filename, "r");
-    if (!file)
-    {
-        printf("Error: File not found!\n");
-        return NULL;
+vector<unsigned char> readBinaryFile(const string& filename) {
+    ifstream file(filename, ios::binary | ios::ate);
+    if (!file.is_open()) {
+        throw runtime_error("Не удалось открыть файл: " + filename);
     }
 
-    OuterNode* head = NULL;
-    OuterNode* currentOuter = NULL;
-    char buffer[256];
-    int count = 0;
+    streamsize size = file.tellg();
+    file.seekg(0, ios::beg);
 
-    while (fgets(buffer, sizeof(buffer), file))
-    {
-        buffer[strcspn(buffer, "\n")] = 0;
-
-        if (head == NULL || count == N)
-        {
-            OuterNode* newOuter = createOuterNode();
-            if (head == NULL)
-            {
-                head = newOuter;
-            }
-            else
-            {
-                currentOuter->next = newOuter;
-            }
-            currentOuter = newOuter;
-            count = 0;
-        }
-
-        InnerNode* newInner = createInnerNode(buffer);
-
-        if (currentOuter->childHead == NULL)
-        {
-            currentOuter->childHead = newInner;
-        }
-        else
-        {
-            InnerNode* temp = currentOuter->childHead;
-            while (temp->next != NULL)
-            {
-                temp = temp->next;
-            }
-            temp->next = newInner;
-        }
-        count++;
+    vector<unsigned char> buffer(size);
+    if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
+        throw runtime_error("Ошибка чтения файла");
     }
 
-    fclose(file);
-    return head;
+    return buffer;
 }
+
 uint32_t hash_jerkins(const char* str)
 {
     uint32_t hash = 0;
@@ -119,20 +65,6 @@ uint32_t hash_jerkins(const char* str)
     return hash;
 }
 
-void printListWithHashes(OuterNode* head) {
-    int i = 1;
-    while (head) {
-        printf("Group %d:\n", i++);
-        InnerNode* inner = head->childHead;
-        while (inner) {
-            uint32_t h = hash_jerkins(inner->data);
-            printf("  - Data: [%s] | Hash (Jenkins): %u\n", inner->data, h);
-            inner = inner->next;
-        }
-        head = head->next;
-    }
-}
-
 uint32_t hash_fnv1a(const char *str) {
     uint32_t hash = 2166136261U;
     
@@ -143,22 +75,6 @@ uint32_t hash_fnv1a(const char *str) {
     }
     return hash;
 }
-
-
-void printListWithHashesFNV(OuterNode* head) {
-    int i = 1;
-    while (head) {
-        printf("Group %d:\n", i++);
-        InnerNode* inner = head->childHead;
-        while (inner) {
-            uint32_t h = hash_fnv1a(inner->data);
-            printf("  - Data: [%s] | Hash (FNV-1a): %u\n", inner->data, h);
-            inner = inner->next;
-        }
-        head = head->next;
-    }
-}
-
 void printListWithHashes(OuterNode* head) {
     int i = 1;
     while (head) {
