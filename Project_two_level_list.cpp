@@ -65,16 +65,22 @@ uint32_t hash_jerkins(const char* str)
     return hash;
 }
 
-uint32_t hash_fnv1a(const char *str) {
-    uint32_t hash = 2166136261U;
-    
-    while (*str) {
-        hash ^= (unsigned char)(*str); 
-        hash *= 16777619U;           
-        str++;                       
+string hash_fnv1a(const vector<unsigned char>& data) {
+    const uint64_t FNV_OFFSET_BASIS = 14695981039346656037ULL;
+    const uint64_t FNV_PRIME = 1099511628211ULL;
+
+    uint64_t hash = FNV_OFFSET_BASIS;
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        hash ^= data[i];
+        hash *= FNV_PRIME;
     }
-    return hash;
+
+    ostringstream oss;
+    oss << hex << setw(16) << setfill('0') << hash;
+    return oss.str();
 }
+
 void printListWithHashes(OuterNode* head) {
     int i = 1;
     while (head) {
