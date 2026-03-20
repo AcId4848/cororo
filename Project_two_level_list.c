@@ -1,19 +1,34 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <iomanip>
+#include <string>
+#include <sstream>
+#include <windows.h>
+#include <locale>
 
-typedef struct InnerNode
-{
-    char* data;
-    struct InnerNode* next;
-} InnerNode;
+using namespace std;
 
-typedef struct OuterNode
-{
-    InnerNode* childHead;
-    struct OuterNode* next;
-} OuterNode;
+void setupLocalization() {
+    SetConsoleCP(65001);
+    SetConsoleOutputCP(65001);
+
+    setlocale(LC_ALL, "ru_RU.UTF-8");
+
+    setlocale(LC_ALL, "Russian_Russia.65001");
+
+    try {
+        locale::global(locale("ru_RU.UTF-8"));
+        cout.imbue(locale());
+    } catch (...) {
+        try {
+            locale::global(locale("Russian_Russia.65001"));
+            cout.imbue(locale());
+        } catch (...) {
+            locale::global(locale(""));
+        }
+    }
+}
 
 InnerNode* createInnerNode(char* text)
 {
